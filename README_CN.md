@@ -131,6 +131,46 @@ class CustomPolicyMiddleware
 }
 ```
 
+### 自定义权限标识符
+
+创建自定义权限标识符的生成规则类：
+
+```php
+use Illuminate\Http\Request;
+use Jundayw\Policy\Contracts\CanPoliceable;
+
+class CustomPoliceable implements CanPoliceable
+{
+    public function __invoke(Request $request): mixed
+    {
+        if (app()->runningInConsole()) {
+            return null;
+        }
+
+        return $request->path();
+    }
+}
+```
+
+注册到容器：
+
+```php
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+use Jundayw\Policy\Contracts\CanPoliceable;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        $this->app->bind(CanPoliceable::class, function () {
+            return new CustomPoliceable;
+        });
+    }
+}
+```
+
 ### 调试模式
 
 你可以通过发布配置文件来开启或关闭权限验证，方便在开发或测试环境中暂时绕过权限检查。

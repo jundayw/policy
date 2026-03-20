@@ -64,6 +64,8 @@ class User extends Authenticatable implements Policeable
             'backend.policy.create',
             'backend.policy.update',
             'backend.policy.destroy',
+            'backend.role.*',
+            'backend.*.*',
         ];
     }
 }
@@ -128,7 +130,45 @@ class CustomPolicyMiddleware
 }
 ```
 
-Then register the custom middleware in `app/Http/Kernel.php` and use it in your routes.
+### Custom Permission Identifier
+
+Create a custom rule class for generating permission identifiers:
+
+```php
+use Illuminate\Http\Request;
+use Jundayw\Policy\Contracts\CanPoliceable;
+
+class CustomPoliceable implements CanPoliceable
+{
+    public function __invoke(Request $request): mixed
+    {
+        if (app()->runningInConsole()) {
+            return null;
+        }
+
+        return $request->path();
+    }
+}
+```
+
+Register it in the container:
+
+```php
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+use Jundayw\Policy\Contracts\CanPoliceable;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        $this->app->bind(CanPoliceable::class, function () {
+            return new CustomPoliceable;
+        });
+    }
+}
+```
 
 ### Debug Mode
 

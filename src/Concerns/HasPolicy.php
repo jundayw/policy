@@ -41,9 +41,4 @@ trait HasPolicy
         // 默认验证不通过
         return false;
     }
-
-    public function getPolicies(string $ability, array $arguments = []): array
-    {
-        return [];
-    }
 }
