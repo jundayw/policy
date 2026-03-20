@@ -3,14 +3,13 @@
 namespace Jundayw\Policy;
 
 use Illuminate\Contracts\Auth\Access\Gate;
-use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider;
 use Illuminate\View\Compilers\BladeCompiler;
 use Jundayw\Policy\Contracts\CanPoliceable;
 use Jundayw\Policy\Middleware\Policies;
 use Jundayw\Policy\Support\NamespaceControllerActionName;
 
-class PolicyServiceProvider extends AuthServiceProvider implements DeferrableProvider
+class PolicyServiceProvider extends AuthServiceProvider
 {
     /**
      * The model to policy mappings for the application.
@@ -100,15 +99,5 @@ class PolicyServiceProvider extends AuthServiceProvider implements DeferrablePro
             $app->make(NamespaceControllerActionName::class),
             app('request')
         ));
-    }
-
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides(): array
-    {
-        return [CanPoliceable::class];
     }
 }
