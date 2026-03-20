@@ -13,6 +13,11 @@ class NamespaceControllerActionName implements CanPoliceable
             return null;
         }
 
-        return $request->route()->getName();
+        $uri = match ($request->route()->getName()) {
+            'gateway' => app('router')->current()?->getName() ?? app('router')->current()?->uri() ?? $request->path(),
+            default => $request->route()?->getName() ?? $request->path()
+        };
+
+        return str_replace('/', '.', $uri);
     }
 }

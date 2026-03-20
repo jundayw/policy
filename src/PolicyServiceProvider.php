@@ -3,13 +3,14 @@
 namespace Jundayw\Policy;
 
 use Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider;
 use Illuminate\View\Compilers\BladeCompiler;
 use Jundayw\Policy\Contracts\CanPoliceable;
 use Jundayw\Policy\Middleware\Policies;
 use Jundayw\Policy\Support\NamespaceControllerActionName;
 
-class PolicyServiceProvider extends AuthServiceProvider
+class PolicyServiceProvider extends AuthServiceProvider implements DeferrableProvider
 {
     /**
      * The model to policy mappings for the application.
@@ -32,7 +33,6 @@ class PolicyServiceProvider extends AuthServiceProvider
         }
 
         $this->registerBladeExtensions();
-        $this->registerCanPoliceable();
         $this->addMiddlewareAlias('policy', Policies::class);
     }
 
@@ -46,14 +46,6 @@ class PolicyServiceProvider extends AuthServiceProvider
                 return app(Gate::class)->any($abilities, $arguments);
             });
         });
-    }
-
-    public function registerCanPoliceable(): void
-    {
-        $this->app->bind(CanPoliceable::class, static fn($app) => call_user_func(
-            $app->make(NamespaceControllerActionName::class),
-            app('request')
-        ));
     }
 
     /**
@@ -87,6 +79,7 @@ class PolicyServiceProvider extends AuthServiceProvider
         }
 
         $this->registerPolicies();
+        $this->registerCanPoliceable();
     }
 
     /**
@@ -99,5 +92,23 @@ class PolicyServiceProvider extends AuthServiceProvider
         $this->publishes([
             __DIR__.'/../config/policy.php' => config_path('policy.php'),
         ], 'policy-config');
+    }
+
+    public function registerCanPoliceable(): void
+    {
+        $this->app->bind(CanPoliceable::class, static fn($app) => call_user_func(
+            $app->make(NamespaceControllerActionName::class),
+            app('request')
+        ));
+    }
+
+    /**
+     * Get the services provided by the provider.
+     *
+     * @return array
+     */
+    public function provides(): array
+    {
+        return [CanPoliceable::class];
     }
 }
