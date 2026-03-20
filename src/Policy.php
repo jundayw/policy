@@ -28,12 +28,6 @@ class Policy
             );
         }
 
-        $args = [$method];
-
-        foreach ($arguments as $argument) {
-            $args[] = $argument;
-        }
-
-        return call_user_func_array([$instance, $instanceMethod], $args);
+        return call_user_func_array([$instance, $instanceMethod], [$method, ...$arguments]);
     }
 }

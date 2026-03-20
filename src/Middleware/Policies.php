@@ -5,14 +5,12 @@ namespace Jundayw\Policy\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Jundayw\Policy\Contracts\CanPoliceable;
 use Jundayw\Policy\Exceptions\PolicyException;
 use Jundayw\Policy\Policy;
-use Jundayw\Policy\Support\NamespaceControllerActionNameTrait;
 
 class Policies
 {
-    use NamespaceControllerActionNameTrait;
-
     /**
      * Handle an incoming request.
      *
@@ -23,7 +21,7 @@ class Policies
      */
     public function handle(Request $request, Closure $next): mixed
     {
-        if ($request->user()->can($this->getNamespaceControllerActionName('.'), [Policy::class])) {
+        if ($request->user()->can(app(CanPoliceable::class), [Policy::class])) {
             return $next($request);
         }
 
