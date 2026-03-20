@@ -1,10 +1,10 @@
 <a id="readme-top"></a>
 
-# Laravel Policy
+# Policy
 
-一个灵活的 Laravel 权限校验系统，支持通过模型方法动态返回权限标识，并提供便捷的中间件集成能力。
+A flexible policy verification system for Laravel, supporting dynamic return of permission identifiers through model methods and providing easy integration with middleware.
 
-中文 | [English](./README_EN.md)
+[中文](./README_CN.md) | English
 
 [![GitHub Tag][GitHub Tag]][GitHub Tag URL]
 [![Total Downloads][Total Downloads]][Packagist URL]
@@ -12,38 +12,37 @@
 [![Packagist PHP Version Support][Packagist PHP Version Support]][Repository URL]
 [![Packagist License][Packagist License]][Repository URL]
 
-<!-- 目录 -->
-
+<!-- TABLE OF CONTENTS -->
 <details>
-    <summary>目录</summary>
+    <summary>Table of Contents</summary>
     <ol>
-        <li><a href="#installation">安装</a></li>
-        <li><a href="#usage">使用方法</a></li>
-        <li><a href="#contributing">参与贡献</a></li>
-        <li><a href="#contributors">贡献者</a></li>
-        <li><a href="#license">许可证</a></li>
+        <li><a href="#installation">Installation</a></li>
+        <li><a href="#usage">Usage</a></li>
+        <li><a href="#contributing">Contributing</a></li>
+        <li><a href="#contributors">Contributors</a></li>
+        <li><a href="#license">License</a></li>
     </ol>
 </details>
 
-<!-- 安装 -->
+<!-- INSTALLATION -->
 
-## Installation（安装）
+## Installation
 
-你可以通过 [Composer] 安装此扩展包：
+You can install the package via [Composer]:
 
 ```bash
 composer require jundayw/policy
 ```
 
-<p align="right">[<a href="#readme-top">返回顶部</a>]</p>
+<p align="right">[<a href="#readme-top">back to top</a>]</p>
 
-<!-- 使用 -->
+<!-- USAGE EXAMPLES -->
 
-## Usage（使用方法）
+## Usage
 
-### 模型准备
+### Model Preparation
 
-需要被验证权限的模型（例如 `App\Models\User`）必须实现 `Jundayw\Policy\Contracts\Policeable` 接口，并引入 `Jundayw\Policy\Concerns\HasPolicy` trait。同时需要实现 `getPolicies(string $ability, array $arguments = []): array` 方法，返回当前用户所拥有的权限标识符数组。
+The model to be verified (e.g., `App\Models\User`) must implement the `Jundayw\Policy\Contracts\Policeable` interface and use the `Jundayw\Policy\Concerns\HasPolicy` trait. Also, implement the `getPolicies(string $ability, array $arguments = []): array` method to return an array of permission identifiers that the current user possesses.
 
 ```php
 namespace App\Models;
@@ -57,7 +56,7 @@ class User extends Authenticatable implements Policeable
 
     public function getPolicies(string $ability, array $arguments = []): array
     {
-        // 这里可以从数据库、缓存等地方获取用户的权限列表
+        // Here you can obtain the user's permission list from the database, cache, etc.
         return [
             'backend.module.create',
             'backend.module.edit',
@@ -65,18 +64,16 @@ class User extends Authenticatable implements Policeable
             'backend.policy.create',
             'backend.policy.update',
             'backend.policy.destroy',
-            'backend.role.*',
-            'backend.*.*',
         ];
     }
 }
 ```
 
-### 使用内置中间件
+### Using Built-in Middleware
 
-包提供了 `policy` 中间件，你可以直接在控制器或路由中使用它进行权限验证。
+The package provides a `policy` middleware that you can use directly in controllers or routes for permission verification.
 
-**在控制器构造函数中：**
+**In the controller constructor:**
 
 ```php
 class UserController extends Controller
@@ -88,7 +85,7 @@ class UserController extends Controller
 }
 ```
 
-**在路由定义中：**
+**In route definitions:**
 
 ```php
 Route::middleware('policy')->group(function () {
@@ -98,11 +95,11 @@ Route::middleware('policy')->group(function () {
 });
 ```
 
-当用户无权访问时，内置中间件会抛出 `Jundayw\Policy\Exceptions\PolicyException` 异常，请根据应用需求自行捕获处理（例如返回 403 页面或 JSON 响应）。
+When a user is unauthorized, the built-in middleware throws a `Jundayw\Policy\Exceptions\PolicyException`. You should handle this exception according to your application's needs (e.g., return a 403 page or JSON response).
 
-### 自定义中间件
+### Custom Middleware
 
-如果你需要更灵活的控制（例如自定义权限标识符的生成规则），可以创建自己的中间件：
+If you need more control (e.g., custom rules for generating permission identifiers), you can create your own middleware:
 
 ```php
 use Jundayw\Policy\Policy;
@@ -112,36 +109,38 @@ class CustomPolicyMiddleware
 {
     public function handle($request, $next)
     {
-        // 根据请求生成权限标识符，例如 "admin.user.update"
+        // Generate a permission identifier based on the request, e.g., "admin.user.update"
         $policy = $this->determinePolicy($request);
 
         if ($request->user()->can($policy, [Policy::class])) {
             return $next($request);
         }
 
-        // 自定义无权访问行为
+        // Custom unauthorized behavior
         throw new PolicyException('Unauthorized', 403);
     }
 
     protected function determinePolicy($request)
     {
-        // 示例：从路由或请求中动态构造权限字符串
+        // Example: dynamically construct a permission string from the route or request
         return $request->route()->getName();
     }
 }
 ```
 
-### 调试模式
+Then register the custom middleware in `app/Http/Kernel.php` and use it in your routes.
 
-你可以通过发布配置文件来开启或关闭权限验证，方便在开发或测试环境中暂时绕过权限检查。
+### Debug Mode
 
-发布配置文件：
+You can enable or disable permission verification by publishing the configuration file, which is useful for temporarily bypassing permission checks in development or testing environments.
+
+Publish the configuration file:
 
 ```bash
 php artisan vendor:publish --tag=policy-config
 ```
 
-配置文件路径为 `config/policy.php`，内容如下：
+The configuration file will be located at `config/policy.php` with the following content:
 
 ```php
 <?php
@@ -149,82 +148,77 @@ php artisan vendor:publish --tag=policy-config
 return [
     /*
     |--------------------------------------------------------------------------
-    | 权限验证开关
+    | Policy Verification Switch
     |--------------------------------------------------------------------------
     |
-    | 当设置为 false 时，所有权限检查都会返回 true，即不进行验证。
-    | 这可以在本地开发或测试环境中临时关闭权限系统。
+    | When set to false, all permission checks will return true, i.e., no verification.
+    | This can be used to temporarily disable the policy system in local development or testing.
     |
     */
     'enabled' => env('POLICY_ENABLED', true),
 ];
 ```
 
-你可以在 `.env` 文件中添加以下配置来控制验证状态：
+You can control the verification status by adding the following to your `.env` file:
 
 ```
 POLICY_ENABLED=false
 ```
 
-## 异常处理
+## Exception Handling
 
-当权限验证失败时，系统会抛出 `Jundayw\Policy\Exceptions\PolicyException`。建议在 `App\Exceptions\Handler` 中统一处理该异常，例如返回友好的错误页面或 JSON 响应：
+When permission verification fails, the system throws a `Jundayw\Policy\Exceptions\PolicyException`. It is recommended to handle this exception uniformly in `App\Exceptions\Handler`, for example, by returning a friendly error page or JSON response:
 
 ```php
 public function register()
 {
     $this->renderable(function (PolicyException $e, $request) {
         if ($request->expectsJson()) {
-            return response()->json(['message' => '无权访问'], 403);
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
         return response()->view('errors.403', [], 403);
     });
 }
 ```
 
-<p align="right">[<a href="#readme-top">返回顶部</a>]</p>
+<!-- CONTRIBUTING -->
 
-<!-- 贡献 -->
+## Contributing
 
-## Contributing（参与贡献）
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-开源社区之所以如此优秀，正是因为大家的贡献让其不断成长、激发灵感并创造价值。非常欢迎你的参与！
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+Don't forget to give the project a star! Thanks again!
 
-如果你有改进建议：
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-* Fork 本仓库
-* 创建你的功能分支（`git checkout -b feature/AmazingFeature`）
-* 提交你的更改（`git commit -m 'Add some AmazingFeature'`）
-* 推送到分支（`git push origin feature/AmazingFeature`）
-* 提交 Pull Request
+<p align="right">[<a href="#readme-top">back to top</a>]</p>
 
-你也可以直接提交 Issue，并标记为 `enhancement`。
+<!-- CONTRIBUTORS -->
 
-如果你觉得这个项目对你有帮助，欢迎点个 ⭐ 支持一下！
+## Contributors
 
-<p align="right">[<a href="#readme-top">返回顶部</a>]</p>
-
-<!-- 贡献者 -->
-
-## Contributors（贡献者）
-
-感谢以下优秀的贡献者：
+Thanks goes to these wonderful people:
 
 <a href="https://github.com/jundayw/policy/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=jundayw/policy" alt="贡献者列表" />
+  <img src="https://contrib.rocks/image?repo=jundayw/policy" alt="contrib.rocks image" />
 </a>
 
-欢迎任何形式的贡献！
+Contributions of any kind are welcome!
 
-<p align="right">[<a href="#readme-top">返回顶部</a>]</p>
+<p align="right">[<a href="#readme-top">back to top</a>]</p>
 
-<!-- 许可证 -->
+<!-- LICENSE -->
 
-## License（许可证）
+## License
 
-本项目基于 MIT License（MIT）开源协议发布。详情请查看 [License File]。
+Distributed under the MIT License (MIT). Please see [License File] for more information.
 
-<p align="right">[<a href="#readme-top">返回顶部</a>]</p>
+<p align="right">[<a href="#readme-top">back to top</a>]</p>
 
 [GitHub Tag]: https://img.shields.io/github/v/tag/jundayw/policy
 
